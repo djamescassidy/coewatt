@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Application {
+  id            Int      @id @unique(map: "sqlite_autoindex_Application_1") @default(autoincrement())
+  Name          String
+  Desc          String
+  Owner         String
+  Events        Event[] 
+  Pages         Page[]
+  env           Environment @relation(fields: [envID], references: [id])
+  envID         Int 
+  Tests         TestRun[]
+}
+
+model Page {
+  id            Int      @id @unique(map: "sqlite_autoindex_Page_1") @default(autoincrement())
+  URL           String
+  Title         String?
+  Action        String?
+  NeedAuth      Boolean
+  Report        Report[]
+  App           Application @relation(fields: [AppID], references: [id], onDelete: Cascade)
+  AppID         Int
+  Compliance    WCAGStatus? @relation(fields: [ComplianceID], references: [id])
+  ComplianceID  Int? @default(3) //Unknown
+}
+
+model WCAGStatus {
+  id      Int @id @unique(map: "sqlite_autoindex_WCAGStatus_1") @default(autoincrement())
+  Status  String
+  Pages   Page[]
+}
+
+model Event {
+  id                  Int      @id @unique(map: "sqlite_autoindex_Event_1") @default(autoincrement())
+  App                 Application @relation(fields: [AppID], references: [id], onDelete: Cascade)
+  AppID               Int
+  Start               DateTime
+  EstimatedCompletion DateTime
+  ActualCompletion    DateTime?
+  Notes               String
+  Status              EventStatus @relation(fields: [StatusID], references: [id])
+  StatusID            Int   
+}
+
+// run 'npx prisma db seed' to apply the default values - this should be added to the .dockerfile
+// Event has one EventStatus, One EventStatus can be referenced by many Events
+model EventStatus {
+  id      Int      @id @unique(map: "sqlite_autoindex_EventStatus_1") @default(autoincrement())
+  Status  String
+  Events  Event[]
+}
+
+model Report {
+  id        Int    @id @unique(map: "sqlite_autoindex_Report_1") @default(autoincrement())
+  PageId    Int
+  Page      Page   @relation(fields: [PageId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  TestRunId Int
+  TestRun   TestRun @relation(fields: [TestRunId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  data      String
+}
+
+model TestRun {
+  id       Int      @id @unique(map: "sqlite_autoindex_TestRun_1") @default(autoincrement())
+  AppID    Int 
+  App      Application @relation(fields: [AppID], references: [id], onDelete: Cascade)
+  Created  DateTime // for getting the most recent TestRun for an appliction
+  Reports  Report[]
+}
+
+model Environment {
+  id      Int @id @unique(map: "sqlite_autoindex_Environment_1") @default(autoincrement())
+  env     String
+  pages   Application[]
+}

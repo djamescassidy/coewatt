@@ -1,0 +1,238 @@
+extends base.pug
+
+block content
+  include messages.pug
+  h1(id="wb-cont" property="name") Application List
+  div 
+    button(type="button", id="addButton").btn.btn-primary Add Application 
+  div(id="addApplication")
+    pp-modal(dataurl="/applications", id="addButtonModal", buttonDisplay="none")
+      span(slot="buttonText") Add Application
+      p(slot="header" style="color: #767676;") Add Application
+      span(slot="formContent")
+        form(id="addApplicationForm", action="/applications", method="post")
+          div.form-group
+            label(for="Name") Application Name 
+            input(type="text", id="Name", placeholder="Enter application name", style="width: 100%;", name="Name", required).form-control 
+          div.form-group
+            label(for="id_new_app_desc") Description 
+            input(type="text", id="id_new_app_desc", placeholder="Small description of the application", style="width: 100%;", name="Desc").form-control
+          div.from-group 
+            label(for="select-env") Environment
+            br 
+            select(name="env" style="width: 100%;" id="select-env").form-control
+              option(selected value="1") Prod
+              option(value="2") QA
+              option(value="3") Dev
+          div.form-group
+            label(for="id_new_app_owner") Owner 
+            input(type="text", id="id_new_app_owner", placeholder="Enter owner name", style="width: 100%;", name="Owner", required).form-control  
+          div.form-group.AddPageButtonDiv
+            button(type="submit" style).btn.btn-success.mrgn-rght-sm Save
+  template(id="editApp")
+    pp-modal(dataurl="/applications", id="editAppModal")
+      span(slot="buttonText") Edit 
+      p(slot="header" style="color: #767676;") Edit Application
+      span(slot="formContent")
+        form(id="UpdateApplicationForm", action="#", method="post")
+          div.form-group
+            label(for="Name") Application Name 
+            br
+            input(type="text", id="Name", placeholder="Enter application name", style="width: 90%;", name="Name", required).form-control 
+          div.form-group
+            label(for="desc") Description 
+            br
+            input(type="text", id="desc", placeholder="Small description of the application", style="width: 90%;", name="Desc").form-control
+          div.from-group 
+            label(for="select-env") Environment
+            br 
+            select(name="env" style="width: 90%;" id="select-env")
+              option(selected value="1") Prod
+              option(value="2") QA
+              option(value="3") Dev
+          div.form-group
+            label(for="owner") Owner
+            br
+            input(type="text", id="owner", placeholder="Enter owner name", style="width: 90%;", name="Owner", required).form-control
+          br
+          div(style="padding-top: 10px").form-group.AddPageButtonDiv
+            button(type="submit", id="test" style).btn.btn-success.mrgn-rght-sm Save
+  template(id="editPage")
+    pp-modal(dataurl="/pages", id="editPageModal")
+      span(slot="buttonText") Edit 
+      p(slot="header" style="color: #767676;") Edit Page
+      span(slot="formContent")
+        form(id="UpdatePageForm", action="#", method="post")
+          div.form-group
+            label(for="Title") Page Title
+            br
+            input(type="text", id="title", placeholder="Enter page title", style="width: 90%;", name="Title", required).form-control 
+            input(type="hidden", id="app", name="App") 
+          div.form-group
+            label(for="URL") Page URL 
+            br
+            input(type="text", id="url", placeholder="Enter page URL", style="width: 90%;", name="URL", required).form-control
+          div.form-group
+            label(for="NeedAuth") Requires Authentication
+            br
+            input(type="checkbox", id="NeedAuth", name="NeedAuth").form-control
+          div.form-group
+            label(for="action") Page Action
+            br
+            input(type="text", id="action", placeholder="Enter page action", style="width: 90%;", name="Action").form-control
+          div(style="padding-top: 10px").form-group.AddPageButtonDiv
+            button(type="submit" style).btn.btn-success.mrgn-rght-sm Save
+  template(id="deleteApp")
+    pp-modal(method="delete", dataurl="/applications", id="deleteAppModal", itemId="0")
+      span(slot="buttonText") Delete 
+      p(slot="header" style="color: #767676;") Delete Appliction
+      span(slot="formContent")
+        form(id="deleteApplicationForm", action="#", method="post")
+          fieldset.form-group 
+            legend.border-bottom.mrgn-bttm-mb Delete Application
+            h2 Are you sure you want to delete this application?
+          div.form-group 
+            button(type="submit").btn.btn-danger Yes I am sure!
+            a(href="/applications").btn.btn.default Cancel
+  template(id="deletePage")
+    pp-modal(method="delete", dataurl="/pages", id="deletePageModal", itemId="0")
+      span(slot="buttonText") Delete 
+      p(slot="header" style="color: #767676;") Delete Page
+      span(slot="formContent")
+        form(id="deletePageForm", action="#", method="post")
+          fieldset.form-group 
+            legend.border-bottom.mrgn-bttm-mb Delete Page
+            h2 Are you sure you want to delete this page?
+          div.form-group 
+            button(type="submit").btn.btn-danger Yes I am sure!
+            a(href="/applications").btn.btn.default Cancel
+  div(id="testApp")
+    pp-modal(dataurl="/pages", id="testAppModal", buttonDisplay="none")
+      span(slot="buttonText") Test 
+      p(slot="header" style="color: #767676;") Test Application 
+      span(slot="formContent")
+        div
+          strong(id="testingAppName" style="font-size:20px;")
+          a(href="javascript: return null;" id="testAppReport" style="display: none;") empty link
+          br
+          div(style="display: none;", id="progress").progress
+            div(role="progressbar", aria-valuenow="0", aria-valuemin="0", aria-valuemax="100", style="width:0%;", id="progress-bar").progress-bar 
+          div(id="id_app_auth_data" style="display: none")
+            p This page is listed as a page that requires authentication, please enter any of the infomation required for authentication in the input boxes below and click submit.
+            div.form-group
+              label(for="id_app_test_loginurl") Log In URL
+              br
+              input(type="text" id="id_app_test_loginurl" placeholder="Enter URL for the login page" style="width: 100%;" name="LogInURL").form-control
+            div.form-group
+              label(for="id_app_test_Username") Username
+              br
+              input(type="text" id="id_app_test_Username" placeholder="Enter Username" style="width: 100%;" name="Username").form-control
+            div.form-group
+              label(for="id_app_test_usernameElement") Username Input Element (example #id_username)
+              br
+              input(type="text" id="id_app_test_usernameElement" placeholder="Enter CSS selector reffering to the Username input element" style="width: 100%;" name="UsernameElement").form-control
+            div.form-group
+              label(for="id_app_test_Password") Password
+              br
+              input(type="password", id="id_app_test_Password" placeholder="Enter Password" style="width: 100%;" name="Password").form-control
+            div.form-group
+              label(for="id_app_test_PasswordElement") Password Input Element (example #id_password)
+              br
+              input(type="text" id="id_app_test_PasswordElement" placeholder="Enter CSS selector reffering to the Password input element" style="width: 100%;" name="PasswordElement").form-control 
+            div.form-group
+              label(for="id_app_test_SubmitButtonElement") Submit/Login Button Element (example #id_submit)
+              br
+              input(type="text" id="id_app_test_SubmitButtonElement" placeholder="Enter CSS selector reffering to the submit/login button element" style="width: 100%;" name="SubmitButtonElement").form-control
+            div.form-group
+              label(for="id_app_test_additionalActions") Additional Actions
+              br
+              input(type="text" id="id_app_test_additionalActions" placeholder="Enter any additional actions to be performed by the tester" style="width: 100%;" name="additionalActions").form-control
+            div.form-group
+              label(for="id_app_test_saveAuth") Use this authentication data for other pages during this test run
+              input(type="checkbox" id="id_app_test_saveAuth" name="id_app_test_saveAuth" style="margin-left: 10px;")
+            div 
+              button(id="id_submit_app_auth_data").btn.btn-success Submit
+          div(id="WCAGSelectDivApp")
+            label(for="WCAGAppSelect" style="padding-right: 10px;") WCAG Version  
+            select(name="WCAG", style="width: 80%;", id="WCAGAppSelect", disabled)
+              option(selected value="2.0") WCAG 2.0
+              option(value="2.1") WCAG 2.1 
+          small(id="testAppHelpText") Click start to start testing
+          p(id="currAppURL")
+          div
+            button(type="button" id="testAppStart" style="margin-right: 5px; padding-right: 10px;").btn.btn-success Start 
+            button(type="button" id="testAppCancel").btn.btn-default Cancel
+  div(id="testPage")
+    pp-modal(dataurl="/pages", id="testPageModal", buttonDisplay="none")
+      span(slot="buttonText") Test 
+      p(slot="header" style="color: #767676;") Test Page 
+      span(slot="formContent")
+        div
+          p(id="currPageURL")  
+          a(href="javascript: return null;" id="testPageReport" style="display: none;") empty link
+          div(style="display: none;", id="page-progress").progress
+            div(role="progressbar", aria-valuenow="0", aria-valuemin="0", aria-valuemax="100", style="width:0%;", id="page-progress-bar").progress-bar 
+          div(id="id_page_auth_data" style="display: none")
+            p This page is listed as a page that requires authentication, please enter any of the infomation required for authentication in the input boxes below and click submit.
+            div.form-group
+              label(for="id_page_test_loginurl") Log In URL
+              br
+              input(type="text" id="id_page_test_loginurl" placeholder="Enter URL for the login page" style="width: 100%;" name="LogInURL").form-control
+            div.form-group
+              label(for="id_page_test_Username") Username
+              br
+              input(type="text" id="id_page_test_Username" placeholder="Enter Username" style="width: 100%;" name="Username").form-control
+            div.form-group
+              label(for="id_page_test_usernameElement") Username Input Element (example #id_username)
+              br
+              input(type="text" id="id_page_test_usernameElement" placeholder="Enter CSS selector reffering to the Username input element" style="width: 100%;" name="UsernameElement").form-control
+            div.form-group
+              label(for="id_page_test_Password") Password
+              br
+              input(type="password", id="id_page_test_Password" placeholder="Enter Password" style="width: 100%;" name="Password").form-control
+            div.form-group
+              label(for="id_page_test_PasswordElement") Password Input Element (example #id_password)
+              br
+              input(type="text" id="id_page_test_PasswordElement" placeholder="Enter CSS selector reffering to the Password input element" style="width: 100%;" name="PasswordElement").form-control 
+            div.form-group
+              label(for="id_page_test_SubmitButtonElement") Submit/Login Button Element (example #id_submit)
+              br
+              input(type="text" id="id_page_test_SubmitButtonElement" placeholder="Enter CSS selector reffering to the submit/login button element" style="width: 100%;" name="SubmitButtonElement").form-control
+            div.form-group
+              label(for="id_page_test_additionalActions") Additional Actions
+              br
+              input(type="text" id="id_page_test_additionalActions" placeholder="Enter any additional actions to be performed by the tester" style="width: 100%;" name="additionalActions").form-control
+            div 
+              button(id="id_submit_page_auth_data").btn.btn-success Submit
+          div(id="WCAGSelectDivPage")
+            label(for="WCAGPageSelect" style="padding-right: 10px;") WCAG Version  
+            select(name="WCAG", style="width: 80%;", id="WCAGPageSelect", disabled)
+              option(selected value="2.0") WCAG 2.0
+              option(value="2.1") WCAG 2.1 
+          small(id="testPageHelpText") Click start to start testing
+          div
+            button(type="button" id="testPageStart" style="margin-right: 5px; padding-right: 10px;").btn.btn-success Start 
+            button(type="button" id="testPageCancel") Cancel
+  div(id="grid")
+    data-grid(dataurl="/applications", 
+      dataheaders='["ID","Application Name", "Desc", "Owner", "Environment", "-" , "-" , "-" ]', tableName="Applications")
+
+  template(id="dataGrid")
+    data-grid(dataurl="/pages",
+      dataheaders='["ID","URL", "Title", "Action", "Requires Auth", "App ID", "WCAG Compliace", "-" , "-" , "-" ]', tableName="Pages")
+
+  block script 
+    script(type="text/javascript", src="static/components/modal.js") 
+    script(type="text/javascript" src="static/components/datagrid.js")
+    script(type="text/javascript" src="static/js/removeMessage.js")
+    script(type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js")
+    script(nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js")
+    script(type="text/javascript" src="static/js/callTester.js") 
+
+  script. 
+    let addButton = document.getElementById("addButton");
+    addButton.addEventListener("click", popUpModal);
+    function popUpModal() {
+      let addButtonModal = document.getElementById("addButtonModal");
+      addButtonModal._showModal();
+    }

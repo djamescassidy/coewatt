@@ -1,0 +1,266 @@
+extends base.pug
+
+block content
+  include messages.pug
+  div.mrgn-tp-md
+    ul(style="text-align: center;").color-legend
+      li Event Scheduled
+        span(style="background-color: #808080;")
+      li Event In Progress
+        span(style="background-color: #3788d8;")
+      li Event Completed
+        span(style="background-color: #008000;")
+      li Event Past Due
+        span(style="background-color: #D0312D;")
+  div(id='calendar').mrgn-bttm-md.mrgn-tp-md  
+  div(id="addEvent")
+    pp-modal(dataurl="/schedule", id="modal", buttonDisplay="none")
+      span(slot="buttonText") Add Event
+      p(slot="header" style="color: #767676;") Schedule Event
+      span(slot="formContent")
+        form(id="addSceduleEventForm", action="/events", method="post")
+          div.form-group
+            label(for="addAppSelect") Application  
+            br
+            select(name="App", style="width: 100%;", id="addAppSelect", required)
+              option(disabled selected value) -- select an option -- 
+          div.form-group
+            label(for="start") Start date 
+            br
+            input(type="date", id="start", style="width: 100%;", name="Start", min="2018-01-01", max="2050-01-01", required).form-control
+          div.form-group
+            label(for="EstimatedCompletion") Estimated Completion Date
+            br
+            input(type="date", id="EstimatedCompletion", style="width: 100%;", name="EstimatedCompletion", min="2018-01-01", max="2050-01-01", required).form-control
+          div.form-group
+            label(for="ActualCompletion") Actual Completion Date
+            br
+            input(type="date", id="ActualCompletion", style="width: 100%;", name="ActualCompletion", min="2018-01-01", max="2050-01-01").form-control
+          div.form-group
+            label(for="addStatusSelect") Event Status 
+            br
+            select(name="status", style="width: 100%;", id="addStatusSelect", required)
+              option(value="1" selected) Scheduled
+              option(value="2") In Progress
+              option(value="3") Completed
+          div.form-group
+            label(for="notes") Notes
+            br 
+            textarea(type="text", id="notes", placeholder="Any notes about the event", style="width: 100%;", name="Notes").form-control
+          div(style="padding-top: 10px").form-group.AddEventButtonDiv
+            button(type="submit" style).btn.btn-success.mrgn-rght-sm Save
+
+  div(id="editEvent")
+    pp-modal(dataurl="/schedule", id="editModal", buttonDisplay="none")
+      span(slot="buttonText") Edit Event
+      p(slot="header" style="color: #767676;") Edit Event
+      span(slot="formContent")
+        form(id="editSceduleEventForm", action="/events", method="post")
+          div.form-group
+            label(for="editAppSelect") Application  
+            br
+            select(name="App", style="width: 100%;", id="editAppSelect")
+            input(type="hidden", id="editID") 
+          div.form-group
+            label(for="editStart") Start date 
+            br
+            input(type="date", id="editStart", style="width: 100%;", name="Start", min="2018-01-01", max="2050-01-01", required).form-control
+          div.form-group
+            label(for="editEstimatedCompletion") Estimated Completion Date
+            br
+            input(type="date", id="editEstimatedCompletion", style="width: 100%;", name="EstimatedCompletion", min="2018-01-01", max="2050-01-01", required).form-control
+          div.form-group
+            label(for="editActualCompletion") Actual Completion Date
+            br
+            input(type="date", id="editActualCompletion", style="width: 100%;", name="ActualCompletion", min="2018-01-01", max="2050-01-01").form-control          
+          div.form-group
+            label(for="editStatusSelect") Event Status 
+            br
+            select(name="status", style="width: 100%;", id="editStatusSelect", required)
+              option(value="1") Scheduled
+              option(value="2") In Progress
+              option(value="3") Completed
+          div.form-group
+            label(for="editNotes") Notes
+            br 
+            textarea(type="text", id="editNotes", placeholder="Any notes about the event", style="width: 100%;", name="Notes").form-control
+          div(style="padding-top: 10px").form-group.AddEventButtonDiv
+            button(type="submit").btn.btn-success.mrgn-rght-sm Update
+            button(type="button", id="deleteButton").btn.btn-danger Delete
+  div(id="deleteEvent")
+    pp-modal(method="delete", dataurl="/schedule", id="deleteModal", buttonDisplay="none")
+      span(slot="buttonText") Delete Event
+      p(slot="header" style="color: #767676;") Delete Event
+      span(slot="formContent")
+        form(id="deleteSceduleEventForm", action="/events", method="post")
+          fieldset.form-group 
+            legend.border-bottom.mrgn-bttm-mb Delete Event
+            h2(id="deleteEventText") Are you sure you want to delete this event?
+          div.form-group 
+            button(type="submit").btn.btn-danger.mrgn-rght-sm Yes I am sure!
+            button(type="button", id="cancelDeleteButton").btn.btn.default Cancel
+
+  block script 
+    script(src="/static/js/fullcalendar-6.1.8/index.global.js")
+    script(type="text/javascript", src="../static/components/modal.js") 
+    script(type="text/javascript" src="static/js/removeMessage.js")
+    script(type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js")
+    script(nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js")
+    link(href="/static/select2/select2.css" rel="stylesheet")
+    script(src="/static/js/jquery/jquery-3.7.0.min.js")
+    script(src="/static/select2/select2.js") 
+
+
+  script. 
+    let modal = document.getElementById("modal");
+    let editModal = document.getElementById("editModal");
+    let deleteModal = document.getElementById("deleteModal");
+    let deleteButton = document.getElementById("deleteButton");
+    let addAppSelect = document.getElementById("addAppSelect");
+    let editAppSelect = document.getElementById("editAppSelect");
+    let cancelDeleteButton = document.getElementById("cancelDeleteButton");
+    deleteButton.addEventListener('click', deleteEvent);
+    cancelDeleteButton.addEventListener('click', cancelDelete);
+
+    function deleteEvent(e){
+      let eventID = document.getElementById("editID").value;
+      let eventApp = editAppSelect.options[editAppSelect.selectedIndex].text;
+      let deleteEventText = document.getElementById("deleteEventText");
+      let deleteSceduleEventForm = document.getElementById("deleteSceduleEventForm");
+      deleteSceduleEventForm.action = `/events/${eventID}?_method=DELETE`;
+      deleteEventText.innerHTML = 'Are you sure you want to delete this event? ' + eventApp;
+      editModal._hideModal();
+      deleteModal._showModal();
+    }
+    
+    function cancelDelete(e) {
+      deleteModal._hideModal();
+    }
+    // Arrow functions doesnt work on IE
+    fetch('/events')
+      .then(function(response){ return response.json(); })
+      .then(function(data){
+        // fullcalendar requires the following object keys to be lowercase:
+        // "start", "end", "title". In the coe database the first letter of  
+        // each of these object keys are in upper case, so the loop below 
+        // creates a new array with the object keys properly parsed.
+        // 'T00:00:00.000Z' is replaced from the time because fullcalendar
+        // tries to convert UTC time to local time, which seems to bring more
+        // complications than necessary as we are not worried about exact times
+        // we really just care about the dates here.
+        // 'T23:59:59' is added to the end date because the fullcalendar event
+        // will not cover the end date without it. Ex/ if the end date 
+        // is May 02, the event will only span up to May 01, it wont span May 02.
+        let parsedData = [];
+        for (let i = 0; i < data.length; i++) {
+          let today = new Date();
+          let estCompleteDateArr = data[i].EstimatedCompletion.replace('T00:00:00.000Z', '').split("-");
+          let estCompleteDate = new Date(estCompleteDateArr[0], estCompleteDateArr[1]-1, estCompleteDateArr[2]);
+          let actCompleteDateArr = null;
+          let actCompleteDate = 0;
+          if (!data[i].ActualCompletion == null) {
+            actCompleteDateArr = data[i].ActualCompletion.replace('T00:00:00.000Z', '').split("-");
+            actCompleteDate = new Date(actCompleteDateArr[0], actCompleteDateArr[1]-1, actCompleteDateArr[2]);
+          }
+          
+          let eventColor = '#808080'; // event scheduled
+          if ((today>estCompleteDate) && (today>actCompleteDate) && (data[i].StatusID != 3)) {   eventColor = '#D0312D';   } // past due   
+          else if (data[i].StatusID == 2) {   eventColor = '#3788d8';   } // in progress
+          else if (data[i].StatusID == 3) { eventColor = '#008000';   }  // completed
+          let currEventEnd = null;
+          if (data[i].ActualCompletion && data[i].ActualCompletion > data[i].EstimatedCompletion) {
+            currEventEnd = data[i].ActualCompletion;
+          }
+          else {
+            currEventEnd = data[i].EstimatedCompletion;
+          }
+          let currEvent = { 
+            id: data[i].id, 
+            "title": data[i].App.Name,
+            "start": data[i].Start.replace('T00:00:00.000Z', ''),
+            "end":   currEventEnd.replace('T00:00:00.000Z', 'T23:59:59'),
+            "notes": data[i].Notes,
+            "color": eventColor
+          };
+          // if it is a single day event, then adding 'T23:59:59' messes it up
+          if (currEvent.start == currEvent.end.replace('T23:59:59', '')) {
+            currEvent.end = currEvent.end.replace('T23:59:59', '');
+          }
+          parsedData.push(currEvent);
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+          let calendarEl = document.getElementById('calendar');
+          let calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            nextDayThreshold: '00:00:00',
+            displayEventTime: false,
+            events: parsedData,
+            customButtons: {
+              addEventButton: {
+                text: "Add New Event",
+                hint: "Add New Event",
+                click: function() {
+                  modal._showModal();
+                } 
+              }
+            },
+            headerToolbar: {
+              right: 'addEventButton today prev,next'
+            },
+            eventClick: function(info) {
+              document.getElementById("editSceduleEventForm").action = `/events/${info.event.id}?_method=PATCH`;
+              let selectedAppID = -1;
+              fetch(`/events/${info.event.id}`)
+                .then(function(response){   return response.json();   })
+                .then(function(data){  
+                  document.getElementById("editStart").value = data.Start.replace('T00:00:00.000Z', '');
+                  document.getElementById("editEstimatedCompletion").value = data.EstimatedCompletion.replace('T00:00:00.000Z', '');
+                  document.getElementById("editActualCompletion").value = data.ActualCompletion ? data.ActualCompletion.replace('T00:00:00.000Z', '') : null;
+                  document.getElementById("editNotes").value = data.Notes;
+                  document.getElementById("editID").value    = data.id;
+                  document.getElementById("editStatusSelect").value = data.StatusID;
+                  selectedAppID = data.AppID;
+                });
+              let numExistingApps = editAppSelect.options.length;
+              for (let i = numExistingApps; i > 0; i--) {
+                editAppSelect.remove(i - 1);
+              }
+              fetch('/applications')
+                .then(function(response) {   return response.json();   })
+                .then(function(data) {
+                  for (let i = 0; i < data.length; i++) {
+                    let currOption = document.createElement("option");
+                    currOption.text  = data[i].Name;
+                    currOption.value = data[i].id;
+                    if(data[i].id == selectedAppID) {
+                      currOption.selected = true;
+                    }
+                    editAppSelect.add(currOption);
+                  }
+                  $(document).ready(function() {
+                    $('#editAppSelect').select2();
+                    $('#editStatusSelect').select2();
+                    editModal._showModal();
+                  });
+                });
+            }
+          });
+          calendar.render();
+        });
+      });
+
+    fetch('/applications')
+      .then(function(response) {   return response.json();   })
+      .then(function(data){
+        for (let i = 0; i < data.length; i++) {
+          let currOption = document.createElement("option");
+          currOption.text  = data[i].Name;
+          currOption.value = data[i].id;
+          addAppSelect.add(currOption);
+        }
+        $(document).ready(function() {
+          $('#addAppSelect').select2();
+          $('#addStatusSelect').select2();
+        });
+      });
